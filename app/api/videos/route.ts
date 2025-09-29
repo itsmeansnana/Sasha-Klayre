@@ -5,17 +5,25 @@ import { supabaseService } from '@/lib/supabase';
 
 export async function GET() {
   const sb = supabaseService();
-
-  // baca semua, tanpa RLS, lalu filter di kode
   const { data, error } = await sb
     .from('videos')
     .select('id,title,description,thumb_url,teaser_url,full_url,published,created_at')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false, nullsFirst: false });
 
-  if (error) {
-    return Response.json({ error: error.message, data: [] }, { status: 500 });
-  }
+  const body = JSON.stringify({
+    error: error?.message ?? null,
+    data: (data ?? []).filter(v => v.published === true),
+  });
 
-  const publishedOnly = (data || []).filter(v => v.published === true);
-  return Response.json({ data: publishedOnly });
+  return new Response(body, {
+    status: error ? 500 : 200,
+    headers: {
+      'Content-Type': 'application/json',
+      // ← cegah cache di CDN/browser
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      Pragma: 'no-cache',
+      Expires: '0',
+      'Surrogate-Control': 'no-store',
+    },
+  });
 }
