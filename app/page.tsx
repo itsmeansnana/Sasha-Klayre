@@ -1,4 +1,3 @@
-// app/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,32 +8,19 @@ type Video = { id: string; title: string; thumb_url: string; description?: strin
 export default function Page() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/videos', { cache: 'no-store' });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
-        setVideos(json.data || []);
-      } catch (e: any) {
-        setErr(e.message || 'Fetch error');
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  async function load() {
+    const res = await fetch(`/api/videos?ts=${Date.now()}`, { cache: 'no-store' });
+    const json = await res.json();
+    setVideos(json?.data || []);
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, []);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6">
       {loading && <div className="text-white/60 text-sm">Loading…</div>}
-      {err && <div className="text-rose-400 text-sm mb-3">Error: {err}</div>}
-      {!loading && !err && videos.length === 0 && (
-        <div className="text-white/60 text-sm">Belum ada video yang published.</div>
-      )}
-
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {videos.map((v) => (
           <Link key={v.id} href={`/watch/${v.id}`} className="group text-left">
