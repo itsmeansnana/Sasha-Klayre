@@ -57,6 +57,16 @@ published: true,
 })
 if (ins.error) return Response.json({ error: ins.error.message }, { status: 400 })
 
+// app/api/admin/videos/route.ts (bagian insert)
+const ins = await sb.from('videos').insert({
+  title,
+  description,
+  full_url,
+  thumb_url: t1.publicUrl,
+  teaser_url: t2.publicUrl,
+  published: true,
+  created_at: new Date().toISOString(), // pastikan order by terbaru selalu benar
+});
 
 return Response.json({ ok: true })
 }
