@@ -1,16 +1,19 @@
+// app/api/videos/route.ts
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-import Link from "next/link";
-import { supabaseAnon } from "@/lib/supabase";
+import { supabaseService } from '@/lib/supabase';
 
-export default async function Page() {
-  const sb = supabaseAnon();
+export async function GET() {
+  const sb = supabaseService();
   const { data, error } = await sb
-    .from("videos")
-    .select("id,title,thumb_url,description")
-    .eq("published", true)
-    .order("created_at", { ascending: false });
+    .from('videos')
+    .select('id,title,description,thumb_url,teaser_url,full_url,published,created_at')
+    .order('created_at', { ascending: false });
 
+  if (error) return Response.json({ error: error.message, data: [] }, { status: 500 });
+  return Response.json({ data: (data || []).filter(v => v.published === true) });
+}
   const videos = data ?? [];
 
   return (
